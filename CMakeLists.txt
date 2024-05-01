@@ -10,6 +10,8 @@ add_arduino_executable(ardumiata
     src/main.cpp
     src/lcdi2c.cpp
     src/ect.cpp
+    src/voltage.cpp
+    src/buzzer.cpp
 )
 
 find_arduino_library(wire_lib Wire)

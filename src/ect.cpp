@@ -1,5 +1,7 @@
 #include "ect.hpp"
 
+#include "voltage.hpp"
+
 #include <math.h>
 
 namespace
@@ -8,14 +10,12 @@ bool dirty = false;
 int16_t ectRaw = 0;
 float ectCalculated = 0;
 
-constexpr float rawAdcToV = 1.0f / 376.f;
-
 float ectCalculate()
 {
     // symmetrical sigmoid 4PL coefficients
     constexpr float a = 1898162.f, b = 0.4399849f, c = 1.866142e-10f, d = -29.38087f;
 
-    const auto v = ectRaw * rawAdcToV;
+    const auto v = ectRaw * RAW_ADC_TO_VOLT * voltageCorrection();
     return d + (a - d) / (1.f + powf(v / c, b));
 }
 } // namespace
@@ -39,7 +39,7 @@ float ectGetCelsius()
 
 float ectGetVolt()
 {
-    return ectRaw * rawAdcToV;
+    return ectRaw * RAW_ADC_TO_VOLT;
 }
 
 int16_t ectGetRaw()
