@@ -5,12 +5,94 @@
 
 LiquidCrystal_I2C lcd(0x3f, 16, 2);
 
+namespace
+{
+constexpr uint8_t iconTemp = 0;
+constexpr uint8_t charmapTemp[8] = {
+    0b00100,
+    0b00110,
+    0b00100,
+    0b00110,
+    0b00100,
+    0b00100,
+    0b01010,
+    0b00100,
+};
+
+constexpr uint8_t iconOil = 1;
+constexpr uint8_t charmapOil[8] = {
+    0b00100,
+    0b00100,
+    0b01110,
+    0b01110,
+    0b11111,
+    0b11111,
+    0b11111,
+    0b01110,
+};
+
+constexpr uint8_t iconPressure = 2;
+constexpr uint8_t charmapPressure[8] = {
+    0b01110,
+    0b01110,
+    0b01110,
+    0b11111,
+    0b01110,
+    0b00100,
+    0b10001,
+    0b01110,
+};
+
+constexpr uint8_t iconWater = 3;
+constexpr uint8_t charmapWater[8] = {
+    0b10000,
+    0b11111,
+    0b10001,
+    0b11111,
+    0b10001,
+    0b11111,
+    0b00001,
+    0b00000,
+};
+
+constexpr uint8_t iconRpmA = 4;
+constexpr uint8_t charmapRpmA[8] = {
+    0b00000,
+    0b00000,
+    0b00111,
+    0b01000,
+    0b10000,
+    0b10000,
+    0b10000,
+    0b00000,
+};
+
+constexpr uint8_t iconRpmB = 5;
+constexpr uint8_t charmapRpmB[8] = {
+    0b00000,
+    0b00000,
+    0b11100,
+    0b00010,
+    0b00101,
+    0b01001,
+    0b10001,
+    0b00000,
+};
+}
+
 void setup()
 {
     analogReference(EXTERNAL);
 
     lcd.begin();
     lcd.backlight();
+
+    lcd.createChar(iconTemp, charmapTemp);
+    lcd.createChar(iconPressure, charmapPressure);
+    lcd.createChar(iconOil, charmapOil);
+    lcd.createChar(iconWater, charmapWater);
+    lcd.createChar(iconRpmA, charmapRpmA);
+    lcd.createChar(iconRpmB, charmapRpmB);
 }
 
 void updatePeriodicalReadings()
@@ -38,6 +120,11 @@ void updateDisplay()
 
     lcd.setCursor(0, 0);
     {
+        lcd.write(iconOil);
+        lcd.write(iconTemp);
+
+        lcd.write(' ');
+
         lcd.print(voltA);
         lcd.print("V");
 
@@ -54,15 +141,48 @@ void updateDisplay()
         lcd.print(voltB);
     }
 
-    lcd.setCursor(8, 0);
+    lcd.setCursor(9, 0);
     {
+        lcd.write(iconOil);
+        lcd.write(iconPressure);
+
+        lcd.write(' ');
+
+        if (raw < 1000)
+        {
+            lcd.write(' ');
+        }
+
+        if (raw < 100)
+        {
+            lcd.write(' ');
+        }
+
+        if (raw < 10)
+        {
+            lcd.write(' ');
+        }
+
         lcd.print(raw);
-        lcd.print("R");
+    }
+
+    lcd.setCursor(9, 1);
+    {
+        lcd.write(iconRpmA);
+        lcd.write(iconRpmB);
+
+        lcd.print(' ');
+        lcd.print(9000);
     }
 
     lcd.setCursor(0, 1);
     {
         const auto isValid = ectIsValid();
+
+        lcd.write(iconWater);
+        lcd.write(iconTemp);
+
+        lcd.write(' ');
 
         switch (ectIsValid())
         {
@@ -73,8 +193,13 @@ void updateDisplay()
             lcd.print("Hot");
             break;
         case EctRange::OK:
+            if (celsiusA < 100)
+            {
+                lcd.print(' ');
+            }
+
             lcd.print(celsiusA);
-            lcd.print('C');
+            lcd.print('.');
             lcd.print(celsiusB);
         }
     }
