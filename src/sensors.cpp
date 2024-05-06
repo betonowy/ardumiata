@@ -37,9 +37,8 @@ float eotCalculated = 0;
 
 float eotCalculate()
 {
-    static constexpr float a = 4, b = 2, c = 1, d = -1;
-    const auto v = eotRaw * RAW_ADC_TO_VOLT;
-    return fpl(v, a, b, c, d);
+    static constexpr float a = 482.649, b = 0.2944, c = 1255.1238, d = -446.6494;
+    return fpl(eotRaw, a, b, c, d);
 }
 } // namespace
 

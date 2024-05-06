@@ -76,7 +76,7 @@ void updatePeriodicalReadings()
     const auto batteryVolt = getVoltage();
 
     setSlotIcon(DisplaySlot::UL, Icon::OIL, Icon::TEMP);
-    setSlot(DisplaySlot::UL, eotVolt);
+    setSlot(DisplaySlot::UL, eotCelsius);
 
     setSlotIcon(DisplaySlot::UR, Icon::OIL, Icon::PRESSURE);
     setSlot(DisplaySlot::UR, eotRaw);
