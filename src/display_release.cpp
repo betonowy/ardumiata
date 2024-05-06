@@ -1,3 +1,4 @@
+#ifndef DEBUG_DISPLAY
 #include "display.hpp"
 
 #include "lcdi2c.hpp"
@@ -175,3 +176,4 @@ void setSlotIcon(DisplaySlot slot, Icon lhs, Icon rhs)
     icons[index][0] = static_cast<int>(lhs);
     icons[index][1] = static_cast<int>(rhs);
 }
+#endif

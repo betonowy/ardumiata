@@ -13,7 +13,7 @@ float getVoltage()
     return analogRead(A3) * RAW_ADC_TO_VOLT * batteryVoltageMultiplier;
 }
 
-float voltageCorrection()
+float foreignVoltageCorrection()
 {
     return 1 + batteryVoltageCorrectionMultiplier * (1 - getVoltage() / batteryCenterVoltage);
 }

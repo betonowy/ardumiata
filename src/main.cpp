@@ -2,7 +2,7 @@
 
 #include "buzzer.hpp"
 #include "display.hpp"
-#include "ect.hpp"
+#include "sensors.hpp"
 #include "voltage.hpp"
 
 namespace
@@ -65,17 +65,21 @@ void setup()
 void updatePeriodicalReadings()
 {
     ectUpdateRaw(analogRead(A0));
+    eotUpdateRaw(analogRead(A1));
 
-    const auto voltMv = ectGetVolt();
-    const auto raw = ectGetRaw();
-    const auto celsius = ectGetCelsius();
+    const auto ectVolt = ectGetVolt();
+    const auto ectRaw = ectGetRaw();
+    const auto ectCelsius = ectGetCelsius();
+    const auto eotVolt = eotGetVolt();
+    const auto eotRaw = eotGetRaw();
+    const auto eotCelsius = eotGetCelsius();
     const auto batteryVolt = getVoltage();
 
     setSlotIcon(DisplaySlot::UL, Icon::OIL, Icon::TEMP);
-    setSlot(DisplaySlot::UL, voltMv);
+    setSlot(DisplaySlot::UL, eotVolt);
 
     setSlotIcon(DisplaySlot::UR, Icon::OIL, Icon::PRESSURE);
-    setSlot(DisplaySlot::UR, raw);
+    setSlot(DisplaySlot::UR, eotRaw);
 
     setSlotIcon(DisplaySlot::BR, Icon::BAT_A, Icon::BAT_B);
     setSlot(DisplaySlot::BR, batteryVolt);
@@ -84,20 +88,20 @@ void updatePeriodicalReadings()
 
     switch (ectIsValid())
     {
-    case EctRange::TOO_LOW:
+    case SensorRange::TOO_LOW:
         setSlot(DisplaySlot::BL, "Cold");
         break;
-    case EctRange::TOO_HIGH:
+    case SensorRange::TOO_HIGH:
         setSlot(DisplaySlot::BL, "Hot");
         break;
-    case EctRange::OK:
-        setSlot(DisplaySlot::BL, celsius);
+    case SensorRange::OK:
+        setSlot(DisplaySlot::BL, ectCelsius);
     }
 }
 
 void updateAlarm()
 {
-    if (ectGetCelsius() > safeCoolantTempLimit && ectIsValid() == EctRange::OK)
+    if (ectGetCelsius() > safeCoolantTempLimit && ectIsValid() == SensorRange::OK)
     {
         setBuzzer(true);
     }
@@ -107,113 +111,8 @@ void updateAlarm()
     }
 }
 
-// void updateDisplay()
-// {
-//     const auto voltMv = ectGetVolt();
-//     const auto voltDivResult = div(static_cast<int32_t>(round(voltMv * 1000.f)), 1000);
-
-//     const auto voltA = voltDivResult.quot;
-//     const auto voltB = voltDivResult.rem;
-
-//     const auto celsius = ectGetCelsius();
-//     const auto celsiusDivResult = div(static_cast<int32_t>(round(celsius * 10.f)), 10);
-
-//     const auto celsiusA = celsiusDivResult.quot;
-//     const auto celsiusB = celsiusDivResult.rem;
-
-//     const auto raw = ectGetRaw();
-
-//     lcd.clear();
-
-//     lcd.setCursor(0, 0);
-//     {
-//         lcd.write(iconOil);
-//         lcd.write(iconTemp);
-
-//         lcd.write(' ');
-
-//         lcd.print(voltA);
-//         lcd.print("V");
-
-//         if (voltB < 100)
-//         {
-//             lcd.print('0');
-//         }
-
-//         if (voltB < 10)
-//         {
-//             lcd.print('0');
-//         }
-
-//         lcd.print(voltB);
-//     }
-
-//     lcd.setCursor(9, 0);
-//     {
-//         lcd.write(iconOil);
-//         lcd.write(iconPressure);
-
-//         lcd.write(' ');
-
-//         if (raw < 1000)
-//         {
-//             lcd.write(' ');
-//         }
-
-//         if (raw < 100)
-//         {
-//             lcd.write(' ');
-//         }
-
-//         if (raw < 10)
-//         {
-//             lcd.write(' ');
-//         }
-
-//         lcd.print(raw);
-//     }
-
-//     lcd.setCursor(9, 1);
-//     {
-//         lcd.write(iconBatA);
-//         lcd.write(iconBatB);
-
-//         lcd.print(' ');
-//         lcd.print(getVoltage());
-//     }
-
-//     lcd.setCursor(0, 1);
-//     {
-//         const auto isValid = ectIsValid();
-
-//         lcd.write(iconWater);
-//         lcd.write(iconTemp);
-
-//         lcd.write(' ');
-
-//         switch (ectIsValid())
-//         {
-//         case EctRange::TOO_LOW:
-//             lcd.print("Cold");
-//             break;
-//         case EctRange::TOO_HIGH:
-//             lcd.print("Hot");
-//             break;
-//         case EctRange::OK:
-//             if (celsiusA < 100)
-//             {
-//                 lcd.print(' ');
-//             }
-
-//             lcd.print(celsiusA);
-//             lcd.print('.');
-//             lcd.print(celsiusB);
-//         }
-//     }
-// }
-
 unsigned long nextUpdateTime = 0;
-unsigned long screenDelay = 1000;
+unsigned long screenDelay = 250;
 
 bool shouldUpdateDisplay()
 {
