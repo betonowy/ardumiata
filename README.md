@@ -2,13 +2,13 @@
 
 Firmware for custom Arduino Nano powered device. Mainly for precise engine health monitoring on track days. Features:
 
-- Invisible, Non-invasive piggyback off of factory wiring harness if needed at all.
+- Invisible, non-invasive piggyback off of factory wiring harness if needed at all.
 - Modifications are reversible.
 - Cleanly integrates with car's interior. 16x2 green display can replace smoking ashtray on NB1. I made a "mounting bracket" for it with a matte painted piece of wood.
 - Monitoring engine health and more:
     - (ECT) Coolant temperature - piggybacked and calibrated against factory sensor and ECU measurement circuit. May alternatively use temp gauge circuit, but you're on your own to deal with that.
-    - (EOT) Oil temperatoure - from Ecumaster Pressure Sensor.
-    - (EOP) Oil pressure - from Ecumaster Temperature Sensor.
+    - (EOT) Oil temperatoure - from Ecumaster Temperature Sensor.
+    - (EOP) Oil pressure - from Ecumaster Pressure Sensor.
     - (BAT) Battery voltage (from ignition).
 - Alarm when any measurement exceeds safe limits so you know when to cooldown or make an emergency shutdown.
 - If your ECT ever breaks, you will know.
