@@ -1,6 +1,30 @@
 .cache/
 build/
-*.bak
-*-backups
-*-bak
-*-cache
+
+# kicad
+kicad/**/*.000
+kicad/**/*.bak
+kicad/**/*.bck
+kicad/**/*.kicad_pcb-bak
+kicad/**/*.kicad_sch-bak
+kicad/**/*-backups
+kicad/**/*.kicad_prl
+kicad/**/*.sch-bak
+kicad/**/*~
+kicad/**/*.lck
+kicad/**/_autosave-*
+kicad/**/*.tmp
+kicad/**/*-save.pro
+kicad/**/*-save.kicad_pcb
+kicad/**/fp-info-cache
+
+# Netlist files (exported from Eeschema)
+kicad/**/*.net
+
+# Autorouter files (exported from Pcbnew)
+kicad/**/*.dsn
+kicad/**/*.ses
+
+# Exported BOM files
+kicad/**/*.xml
+kicad/**/*.csv
