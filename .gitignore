@@ -1,2 +1,6 @@
 .cache/
 build/
+*.bak
+*-backups
+*-bak
+*-cache

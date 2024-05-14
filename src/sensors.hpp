@@ -25,10 +25,14 @@ float eotGetVolt();
 int16_t eotGetRaw();
 SensorRange eotIsValid();
 
-// Engine Oil Pressure (TODO)
+// Engine Oil Pressure
 
 void eopUpdateRaw(int16_t);
-float eopGetCelsius();
+float eopGetBar();
 float eopGetVolt();
 int16_t eopGetRaw();
 SensorRange eopIsValid();
+
+// Miscelaneous
+
+int hardenedAnalogRead(uint8_t);

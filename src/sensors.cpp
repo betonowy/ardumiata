@@ -1,8 +1,7 @@
 #include "sensors.hpp"
 
+#include "Arduino.h"
 #include "voltage.hpp"
-
-#include <math.h>
 
 namespace
 {
@@ -11,9 +10,22 @@ float fpl(float x, float a, float b, float c, float d)
     return d + (a - d) / (1.f + powf(x / c, b));
 }
 
+float poly(float x, float coeff)
+{
+    return coeff;
+}
+
+template <typename... T> float poly(float x, float coeff, T... values)
+{
+    return coeff + x * poly(x, values...);
+}
+
 constexpr auto rawLimitLow = 2;
 constexpr auto rawLimitHigh = 1022;
+} // namespace
 
+namespace
+{
 constexpr auto ectLimitLow = 20.f;
 constexpr auto ectLimitHigh = 150.f;
 
@@ -26,19 +38,6 @@ float ectCalculate()
     static constexpr float a = 1898162.f, b = 0.4399849f, c = 1.866142e-10f, d = -29.38087f;
     const auto v = ectRaw * RAW_ADC_TO_VOLT * foreignVoltageCorrection();
     return fpl(v, a, b, c, d);
-}
-
-constexpr auto eotLimitLow = 20.f;
-constexpr auto eotLimitHigh = 200.f;
-
-bool eotDirty = false;
-int16_t eotRaw = 0;
-float eotCalculated = 0;
-
-float eotCalculate()
-{
-    static constexpr float a = 482.649, b = 0.2944, c = 1255.1238, d = -446.6494;
-    return fpl(eotRaw, a, b, c, d);
 }
 } // namespace
 
@@ -96,6 +95,27 @@ SensorRange ectIsValid()
     return SensorRange::OK;
 }
 
+namespace
+{
+constexpr auto eotLimitLow = 20.f;
+constexpr auto eotLimitHigh = 200.f;
+
+bool eotDirty = false;
+int16_t eotRaw = 0;
+float eotCalculated = 0;
+
+float eotCalculate()
+{
+    static constexpr float a = 1.2648956137817963e+002f;
+    static constexpr float b = 5.7474894088403061e-002f;
+    static constexpr float c = -5.6581049414433876e-004f;
+    static constexpr float d = 7.1433772431536088e-007f;
+    static constexpr float e = -3.0277452553952537e-010f;
+
+    return poly(eotRaw, a, b, c, d, e);
+}
+} // namespace
+
 void eotUpdateRaw(int16_t value)
 {
     eotRaw = value;
@@ -146,4 +166,97 @@ SensorRange eotIsValid()
     {
         return SensorRange::TOO_HIGH;
     }
+
+    return SensorRange::OK;
+}
+
+namespace
+{
+constexpr auto eopLimitLow = -0.01f;
+constexpr auto eopLimitHigh = 10.1f;
+
+bool eopDirty = false;
+int16_t eopRaw = 0;
+float eopCalculated = 0;
+
+float eopCalculate()
+{
+    // assumes presence of 0.5 multiplier voltage divider
+    return poly(eopRaw * RAW_ADC_TO_VOLT * 2.f, -1.25f, 2.5f);
+}
+} // namespace
+
+void eopUpdateRaw(int16_t value)
+{
+    eopRaw = value;
+    eopDirty = true;
+}
+
+float eopGetBar()
+{
+    if (eopDirty)
+    {
+        eopCalculated = eopCalculate();
+        eopDirty = false;
+    }
+
+    return eopCalculated;
+}
+
+float eopGetVolt()
+{
+    return eopRaw * RAW_ADC_TO_VOLT;
+}
+
+int16_t eopGetRaw()
+{
+    return eopRaw;
+}
+
+SensorRange eopIsValid()
+{
+    const auto t = eopGetBar();
+
+    if (eopRaw < rawLimitLow)
+    {
+        return SensorRange::TOO_LOW;
+    }
+
+    if (eopRaw > rawLimitHigh)
+    {
+        return SensorRange::TOO_HIGH;
+    }
+
+    if (t < eopLimitLow)
+    {
+        return SensorRange::TOO_LOW;
+    }
+
+    if (t > eopLimitHigh)
+    {
+        return SensorRange::TOO_HIGH;
+    }
+
+    return SensorRange::OK;
+}
+
+int hardenedAnalogRead(uint8_t pin)
+{
+    static constexpr auto readCount = 11;
+    static_assert(readCount % 2 == 1, "Must be an odd number");
+
+    int reads[readCount];
+
+    for (auto &read : reads)
+    {
+        read = analogRead(pin);
+    }
+
+    qsort(reads, readCount, sizeof(*reads), [](const void *pLhs, const void *pRhs) {
+        const auto lhs = *reinterpret_cast<const int *>(pLhs);
+        const auto rhs = *reinterpret_cast<const int *>(pRhs);
+        return lhs < rhs ? -1 : (lhs > rhs ? 1 : 0);
+    });
+
+    return reads[readCount / 2];
 }

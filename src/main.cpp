@@ -5,51 +5,6 @@
 #include "sensors.hpp"
 #include "voltage.hpp"
 
-namespace
-{
-// constexpr uint8_t iconTemp = 0;
-// constexpr uint8_t charmapTemp[8] = {
-//     0b00100, 0b00110, 0b00100, 0b00110, 0b00100, 0b00100, 0b01010, 0b00100,
-// };
-
-// constexpr uint8_t iconOil = 1;
-// constexpr uint8_t charmapOil[8] = {
-//     0b00100, 0b00100, 0b01110, 0b01110, 0b11111, 0b11111, 0b11111, 0b01110,
-// };
-
-// constexpr uint8_t iconPressure = 2;
-// constexpr uint8_t charmapPressure[8] = {
-//     0b01110, 0b01110, 0b01110, 0b11111, 0b01110, 0b00100, 0b10001, 0b01110,
-// };
-
-// constexpr uint8_t iconWater = 3;
-// constexpr uint8_t charmapWater[8] = {
-//     0b10000, 0b11111, 0b10001, 0b11111, 0b10001, 0b11111, 0b00001, 0b00000,
-// };
-
-// constexpr uint8_t iconRpmA = 4;
-// constexpr uint8_t charmapRpmA[8] = {
-//     0b00000, 0b00000, 0b00111, 0b01000, 0b10000, 0b10000, 0b10000, 0b00000,
-// };
-
-// constexpr uint8_t iconRpmB = 5;
-// constexpr uint8_t charmapRpmB[8] = {
-//     0b00000, 0b00000, 0b11100, 0b00010, 0b00101, 0b01001, 0b10001, 0b00000,
-// };
-
-// constexpr uint8_t iconBatA = 6;
-// constexpr uint8_t charmapBatA[8] = {
-//     0b00000, 0b01100, 0b11111, 0b10000, 0b10010, 0b10111, 0b10010, 0b10000,
-// };
-
-// constexpr uint8_t iconBatB = 7;
-// constexpr uint8_t charmapBatB[8] = {
-//     0b00000, 0b00110, 0b11111, 0b00001, 0b00001, 0b11101, 0b00001, 0b00001,
-// };
-
-constexpr auto safeCoolantTempLimit = 115.f;
-} // namespace
-
 void setup()
 {
     analogReference(EXTERNAL);
@@ -64,44 +19,79 @@ void setup()
 
 void updatePeriodicalReadings()
 {
-    ectUpdateRaw(analogRead(A0));
-    eotUpdateRaw(analogRead(A1));
+    ectUpdateRaw(hardenedAnalogRead(A0));
+    eotUpdateRaw(hardenedAnalogRead(A1));
+    eopUpdateRaw(hardenedAnalogRead(A2));
 
-    const auto ectVolt = ectGetVolt();
-    const auto ectRaw = ectGetRaw();
-    const auto ectCelsius = ectGetCelsius();
-    const auto eotVolt = eotGetVolt();
-    const auto eotRaw = eotGetRaw();
-    const auto eotCelsius = eotGetCelsius();
-    const auto batteryVolt = getVoltage();
-
-    setSlotIcon(DisplaySlot::UL, Icon::OIL, Icon::TEMP);
-    setSlot(DisplaySlot::UL, eotCelsius);
-
-    setSlotIcon(DisplaySlot::UR, Icon::OIL, Icon::PRESSURE);
-    setSlot(DisplaySlot::UR, eotRaw);
-
-    setSlotIcon(DisplaySlot::BR, Icon::BAT_A, Icon::BAT_B);
-    setSlot(DisplaySlot::BR, batteryVolt);
-
-    setSlotIcon(DisplaySlot::BL, Icon::WATER, Icon::TEMP);
-
-    switch (ectIsValid())
     {
-    case SensorRange::TOO_LOW:
-        setSlot(DisplaySlot::BL, "Cold");
-        break;
-    case SensorRange::TOO_HIGH:
-        setSlot(DisplaySlot::BL, "Hot");
-        break;
-    case SensorRange::OK:
-        setSlot(DisplaySlot::BL, ectCelsius);
+        setSlotIcon(DisplaySlot::UL, Icon::OIL, Icon::TEMP);
+
+        switch (eotIsValid())
+        {
+        case SensorRange::OK:
+            setSlot(DisplaySlot::UL, eotGetCelsius());
+            break;
+        case SensorRange::TOO_LOW:
+            setSlot(DisplaySlot::UL, "Cold");
+            break;
+        case SensorRange::TOO_HIGH:
+            setSlot(DisplaySlot::UL, "Hot");
+        }
+    }
+    {
+        setSlotIcon(DisplaySlot::UR, Icon::OIL, Icon::PRESSURE);
+
+        switch (eopIsValid())
+        {
+        case SensorRange::OK:
+            setSlot(DisplaySlot::UR, eopGetBar());
+            break;
+        case SensorRange::TOO_LOW:
+            setSlot(DisplaySlot::UR, 0.0f);
+            break;
+        case SensorRange::TOO_HIGH:
+            setSlot(DisplaySlot::UR, 10.0f);
+        }
+    }
+    {
+        setSlotIcon(DisplaySlot::BL, Icon::WATER, Icon::TEMP);
+
+        switch (ectIsValid())
+        {
+        case SensorRange::OK:
+            setSlot(DisplaySlot::BL, ectGetCelsius());
+            break;
+        case SensorRange::TOO_LOW:
+            setSlot(DisplaySlot::BL, "Cold");
+            break;
+        case SensorRange::TOO_HIGH:
+            setSlot(DisplaySlot::BL, "Hot");
+        }
+    }
+    {
+        setSlotIcon(DisplaySlot::BR, Icon::BAT_A, Icon::BAT_B);
+        setSlot(DisplaySlot::BR, getVoltage());
     }
 }
 
+namespace
+{
+constexpr auto safeCoolantTempLimit = 115.f;
+constexpr auto safeOilTempLimit = 125.f;
+constexpr auto safePressureLimitLow = 1.3f;
+constexpr auto safePressureLimitHigh = 5.0f;
+} // namespace
+
 void updateAlarm()
 {
-    if (ectGetCelsius() > safeCoolantTempLimit && ectIsValid() == SensorRange::OK)
+    bool turnOnAlarm = false;
+
+    turnOnAlarm |= ectGetCelsius() > safeCoolantTempLimit && ectIsValid() == SensorRange::OK;
+    turnOnAlarm |= eotGetCelsius() > safeOilTempLimit && eotIsValid() == SensorRange::OK;
+    turnOnAlarm |= eopGetBar() > safePressureLimitHigh && eopIsValid() == SensorRange::OK;
+    turnOnAlarm |= eopGetBar() < safePressureLimitLow && eopIsValid() == SensorRange::OK;
+
+    if (turnOnAlarm)
     {
         setBuzzer(true);
     }
