@@ -106,11 +106,11 @@ float eotCalculated = 0;
 
 float eotCalculate()
 {
-    static constexpr float a = 1.2648956137817963e+002f;
-    static constexpr float b = 5.7474894088403061e-002f;
-    static constexpr float c = -5.6581049414433876e-004f;
-    static constexpr float d = 7.1433772431536088e-007f;
-    static constexpr float e = -3.0277452553952537e-010f;
+    static constexpr float a = 1.6911545901523502e+002f;
+    static constexpr float b = -2.3234353162296584e-001f;
+    static constexpr float c = 1.3584517967950071e-004f;
+    static constexpr float d = -2.5465668950594277e-009f;
+    static constexpr float e = -4.0678862370423916e-011f;
 
     return poly(eotRaw, a, b, c, d, e);
 }

@@ -17,6 +17,10 @@ kicad/**/*.tmp
 kicad/**/*-save.pro
 kicad/**/*-save.kicad_pcb
 kicad/**/fp-info-cache
+kicad/**/*.zip
+kicad/**/*.gbr
+kicad/**/*.gbrjob
+kicad/**/*.drl
 
 # Netlist files (exported from Eeschema)
 kicad/**/*.net
