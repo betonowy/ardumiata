@@ -7,7 +7,7 @@ project(ardumiata)
 
 add_compile_options(-Wall -Wextra -Wpedantic)
 
-arduino_cmake_project(ardumiata BOARD_NAME nano BOARD_CPU atmega328old)
+arduino_cmake_project(ardumiata BOARD_NAME nano BOARD_CPU atmega328)
 
 add_arduino_executable(ardumiata
     src/main.cpp
@@ -27,4 +27,4 @@ endif()
 
 find_arduino_library(wire_lib Wire)
 link_arduino_library(ardumiata wire_lib)
-set_target_upload_port(ardumiata /dev/ttyUSB0)
+set_target_upload_port(ardumiata /dev/ttyUSB0 )

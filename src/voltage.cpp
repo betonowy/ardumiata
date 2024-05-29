@@ -3,7 +3,7 @@
 
 namespace
 {
-    constexpr auto batteryVoltageMultiplier = 7.83f;
+    constexpr auto batteryVoltageMultiplier = 8.02f;
     constexpr auto batteryCenterVoltage = 14.7f;
     constexpr auto batteryVoltageCorrectionMultiplier = 0.6f;
 }

@@ -11,8 +11,11 @@ void setup()
     setupBuzzer();
     setupDisplay();
 
+    pinMode(4, OUTPUT);
+    digitalWrite(4, HIGH);
+
     // Beep to signal setup completion
-    setBuzzer(true);
+    // setBuzzer(true);
     delay(30);
     setBuzzer(false);
 }
@@ -93,7 +96,7 @@ void updateAlarm()
 
     if (turnOnAlarm)
     {
-        setBuzzer(true);
+        // setBuzzer(true);
     }
     else
     {
