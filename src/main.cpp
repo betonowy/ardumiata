@@ -47,6 +47,7 @@ void updatePeriodicalReadings()
         switch (eopIsValid())
         {
         case SensorRange::OK:
+        case SensorRange::OK_DISABLE_ALARM:
             setSlot(DisplaySlot::UR, eopGetBar());
             break;
         case SensorRange::TOO_LOW:

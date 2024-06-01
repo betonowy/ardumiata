@@ -7,6 +7,7 @@ enum class SensorRange
     OK,
     TOO_LOW,
     TOO_HIGH,
+    OK_DISABLE_ALARM,
 };
 
 // Engine Coolant Temperature

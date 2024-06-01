@@ -28,6 +28,7 @@ namespace
 {
 constexpr auto ectLimitLow = 20.f;
 constexpr auto ectLimitHigh = 150.f;
+constexpr auto ectAdjustment = -4.f;
 
 bool ectDirty = false;
 int16_t ectRaw = 0;
@@ -37,7 +38,7 @@ float ectCalculate()
 {
     static constexpr float a = 1898162.f, b = 0.4399849f, c = 1.866142e-10f, d = -29.38087f;
     const auto v = ectRaw * RAW_ADC_TO_VOLT * foreignVoltageCorrection();
-    return fpl(v, a, b, c, d);
+    return fpl(v, a, b, c, d) + ectAdjustment;
 }
 } // namespace
 
@@ -216,6 +217,13 @@ int16_t eopGetRaw()
 SensorRange eopIsValid()
 {
     const auto t = eopGetBar();
+
+    // Battery voltage is low when engine is turned off.
+    // Pressure reading should not be taken seriously then.
+    if (getVoltage() < 13.5)
+    {
+        return SensorRange::OK_DISABLE_ALARM;
+    }
 
     if (eopRaw < rawLimitLow)
     {
