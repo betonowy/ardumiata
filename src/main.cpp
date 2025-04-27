@@ -83,7 +83,7 @@ namespace
 constexpr auto safeCoolantTempLimit = 115.f;
 constexpr auto safeOilTempLimit = 130.f;
 constexpr auto safePressureLimitLow = 0.65f;
-constexpr auto safePressureLimitHigh = 5.0f;
+constexpr auto safePressureLimitHigh = 6.0f;
 } // namespace
 
 void updateAlarm()
